@@ -1,11 +1,14 @@
 use std::ops::{Add, AddAssign, Index, Mul, MulAssign, Neg, Sub};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Vec3 {
     pub x: f64,
     pub y: f64,
     pub z: f64,
 }
+
+pub type Color = Vec3;
+pub type Point3 = Vec3;
 
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
@@ -81,6 +84,18 @@ impl Mul<f64> for Vec3 {
             x: t * self.x,
             y: t * self.y,
             z: t * self.z,
+        }
+    }
+}
+
+impl Mul<Vec3> for f64 {
+    type Output = Vec3;
+
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        Vec3 {
+            x: self * rhs.x,
+            y: self * rhs.y,
+            z: self * rhs.z,
         }
     }
 }
