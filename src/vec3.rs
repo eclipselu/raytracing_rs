@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Index, Mul, MulAssign, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3 {
@@ -14,8 +14,19 @@ impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Vec3 { x, y, z }
     }
-}
 
+    pub fn length_squared(self) -> f64 {
+        self.x * self.x + self.y * self.y + self.z * self.z
+    }
+
+    pub fn length(self) -> f64 {
+        self.length_squared().sqrt()
+    }
+
+    pub fn unit_vector(self) -> Vec3 {
+        self / self.length()
+    }
+}
 impl Index<usize> for Vec3 {
     type Output = f64;
 
@@ -108,11 +119,22 @@ impl MulAssign<f64> for Vec3 {
     }
 }
 
-impl Mul for Vec3 {
-    type Output = f64;
+impl Div<f64> for Vec3 {
+    type Output = Vec3;
 
-    fn mul(self, rhs: Vec3) -> Self::Output {
-        let result = self.x * rhs.x + self.y * rhs.y + self.z * rhs.z;
-        result
+    fn div(self, t: f64) -> Self::Output {
+        Vec3 {
+            x: self.x / t,
+            y: self.y / t,
+            z: self.z / t,
+        }
+    }
+}
+
+impl DivAssign<f64> for Vec3 {
+    fn div_assign(&mut self, t: f64) {
+        self.x /= t;
+        self.y /= t;
+        self.z /= t;
     }
 }
