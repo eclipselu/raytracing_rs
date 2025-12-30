@@ -1,17 +1,19 @@
+use std::rc::Rc;
+
 use crate::{
     ray::Ray,
     vec3::{Point3, Vec3, dot},
 };
 
 #[derive(Clone, Copy, Debug)]
-pub struct HitRecord {
+pub struct Hit_Record {
     pub p: Point3,
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
 }
 
-impl HitRecord {
+impl Hit_Record {
     fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
         self.front_face = dot(ray.dir, outward_normal) < 0.0;
         self.normal = if self.front_face {
@@ -23,7 +25,7 @@ impl HitRecord {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
+    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<Hit_Record>;
 }
 
 pub struct Sphere {
@@ -32,7 +34,7 @@ pub struct Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<Hit_Record> {
         let oc = self.center - ray.origin;
         let a = dot(ray.dir, ray.dir);
         let h = dot(ray.dir, oc);
@@ -56,7 +58,7 @@ impl Hittable for Sphere {
 
         let point = ray.at(root);
         let normal = (point - self.center) / self.radius;
-        let mut rec = HitRecord {
+        let mut rec = Hit_Record {
             p: point,
             t: root,
             normal: normal,
@@ -65,5 +67,41 @@ impl Hittable for Sphere {
         rec.set_face_normal(&ray, normal);
 
         Option::Some(rec)
+    }
+}
+
+#[derive(Default)]
+pub struct Hittable_List {
+    objects: Vec<Rc<dyn Hittable>>,
+}
+
+impl Hittable_List {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn add(&mut self, object: Rc<dyn Hittable>) {
+        self.objects.push(object);
+    }
+
+    pub fn clear(&mut self) {
+        self.objects.clear();
+    }
+}
+
+impl Hittable for Hittable_List {
+    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<Hit_Record> {
+        let mut closest_so_far = ray_tmax;
+        let mut rec: Option<Hit_Record> = Option::None;
+
+        for object in self.objects.iter() {
+            let tmp_rec = object.hit(ray, ray_tmin, closest_so_far);
+            if let Some(tmp_rec) = tmp_rec {
+                rec = Option::Some(tmp_rec);
+                closest_so_far = tmp_rec.t;
+            }
+        }
+
+        rec
     }
 }
