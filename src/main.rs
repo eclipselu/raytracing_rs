@@ -21,16 +21,16 @@ fn write_color(mut w: impl Write, color: Color) -> io::Result<()> {
 fn hit_sphere(sphere_center: Point3, radius: f64, ray: &Ray) -> f64 {
     let oc = sphere_center - ray.origin;
     let a = dot(ray.dir, ray.dir);
-    let b = -2.0 * dot(ray.dir, oc);
+    let h = dot(ray.dir, oc);
     let c = dot(oc, oc) - radius * radius;
 
-    let discriminant = b * b - 4.0 * a * c;
+    let discriminant = h * h - a * c;
 
     // calculate t, if no such t return a negative number
     if discriminant < 0.0 {
         return -1.0;
     } else {
-        return (-b - discriminant.sqrt()) / (2.0 * a);
+        return (h - discriminant.sqrt()) / a;
     }
 }
 
