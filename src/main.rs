@@ -2,7 +2,7 @@ use std::io::{self, Write, stdout};
 
 use raytracing_rs::{
     ray::Ray,
-    vec3::{Color, Point3, Vec3},
+    vec3::{Color, Point3, Vec3, dot},
 };
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
@@ -17,7 +17,22 @@ fn write_color(mut w: impl Write, color: Color) -> io::Result<()> {
     writeln!(w, "{} {} {}", ir, ig, ib)
 }
 
+fn hit_sphere(sphere_center: Point3, radius: f64, ray: &Ray) -> bool {
+    let oc = sphere_center - ray.origin;
+    let a = dot(ray.dir, ray.dir);
+    let b = -2.0 * dot(ray.dir, oc);
+    let c = dot(oc, oc) - radius * radius;
+
+    let discriminant = b * b - 4.0 * a * c;
+
+    discriminant >= 0.0
+}
+
 fn ray_color(ray: Ray) -> Color {
+    if hit_sphere(Point3::new(0.0, 0.0, -1.0), 0.5, &ray) {
+        return Color::new(1.0, 0.0, 0.0);
+    }
+
     let unit_direction = ray.dir.unit_vector();
     let a = 0.5 * (unit_direction.y + 1.0);
     // TODO: lerp function
@@ -33,7 +48,7 @@ fn main() {
     // Camera
     let focal_length: f64 = 1.0;
     let viewport_height: f64 = 2.0;
-    let viewport_width = viewport_height / ASPECT_RATIO;
+    let viewport_width = viewport_height * ASPECT_RATIO;
     let camera_center = Point3::new(0.0, 0.0, 0.0);
 
     // viewport vectors
