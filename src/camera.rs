@@ -2,6 +2,7 @@ use std::io::{self, Write, stdout};
 
 use crate::{
     hittable::{Hittable, Hittable_List},
+    interval::Interval,
     ray::Ray,
     vec3::{Color, Point3, Vec3},
 };
@@ -69,7 +70,13 @@ impl Camera {
     }
 
     fn ray_color(&self, ray: &Ray, world: &Hittable_List) -> Color {
-        let rec = world.hit(&ray, 0.0, f64::MAX);
+        let rec = world.hit(
+            &ray,
+            Interval {
+                min: 0.0,
+                max: f64::MAX,
+            },
+        );
         if let Some(rec) = rec {
             return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
         }

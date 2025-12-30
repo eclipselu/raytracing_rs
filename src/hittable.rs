@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
+    interval::Interval,
     ray::Ray,
     vec3::{Point3, Vec3, dot},
 };
@@ -25,7 +26,7 @@ impl Hit_Record {
 }
 
 pub trait Hittable {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<Hit_Record>;
+    fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<Hit_Record>;
 }
 
 pub struct Sphere {
@@ -34,7 +35,7 @@ pub struct Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<Hit_Record> {
+    fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<Hit_Record> {
         let oc = self.center - ray.origin;
         let a = dot(ray.dir, ray.dir);
         let h = dot(ray.dir, oc);
@@ -49,9 +50,9 @@ impl Hittable for Sphere {
 
         let sqrtd = discriminant.sqrt();
         let mut root = (h - sqrtd) / a;
-        if root <= ray_tmin || root >= ray_tmax {
+        if root <= ray_t.min || root >= ray_t.max {
             root = (h + sqrtd) / a;
-            if root <= ray_tmin || root >= ray_tmax {
+            if root <= ray_t.min || root >= ray_t.max {
                 return Option::None;
             }
         }
@@ -90,12 +91,18 @@ impl Hittable_List {
 }
 
 impl Hittable for Hittable_List {
-    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<Hit_Record> {
-        let mut closest_so_far = ray_tmax;
+    fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<Hit_Record> {
+        let mut closest_so_far = ray_t.max;
         let mut rec: Option<Hit_Record> = Option::None;
 
         for object in self.objects.iter() {
-            let tmp_rec = object.hit(ray, ray_tmin, closest_so_far);
+            let tmp_rec = object.hit(
+                ray,
+                Interval {
+                    min: ray_t.min,
+                    max: closest_so_far,
+                },
+            );
             if let Some(tmp_rec) = tmp_rec {
                 rec = Option::Some(tmp_rec);
                 closest_so_far = tmp_rec.t;
