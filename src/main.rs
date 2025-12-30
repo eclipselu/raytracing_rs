@@ -1,9 +1,62 @@
-use std::io::{self, Write, stdout};
+use std::{
+    f64,
+    io::{self, Write, stdout},
+};
 
 use raytracing_rs::{
     ray::Ray,
     vec3::{Color, Point3, Vec3, dot},
 };
+
+pub struct HitRecord {
+    pub p: Point3,
+    pub normal: Vec3,
+    pub t: f64,
+}
+
+pub trait Hittable {
+    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord>;
+}
+
+pub struct Sphere {
+    pub center: Point3,
+    pub radius: f64,
+}
+
+impl Hittable for Sphere {
+    fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64) -> Option<HitRecord> {
+        let oc = self.center - ray.origin;
+        let a = dot(ray.dir, ray.dir);
+        let h = dot(ray.dir, oc);
+        let c = dot(oc, oc) - self.radius * self.radius;
+
+        let discriminant = h * h - a * c;
+
+        // calculate t, if no such t return a negative number
+        if discriminant < 0.0 {
+            return Option::None;
+        }
+
+        let sqrtd = discriminant.sqrt();
+        let mut root = (h - sqrtd) / a;
+        if root <= ray_tmin || root >= ray_tmax {
+            root = (h + sqrtd) / a;
+            if root <= ray_tmin || root >= ray_tmax {
+                return Option::None;
+            }
+        }
+
+        let point = ray.at(root);
+        let normal = (point - self.center) / self.radius;
+        let rec = HitRecord {
+            p: point,
+            t: root,
+            normal: normal,
+        };
+
+        Option::Some(rec)
+    }
+}
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const IMAGE_WIDTH: u64 = 400;
@@ -17,28 +70,14 @@ fn write_color(mut w: impl Write, color: Color) -> io::Result<()> {
     writeln!(w, "{} {} {}", ir, ig, ib)
 }
 
-// calculate the point (ray.origin + ray.dir * t)
-fn hit_sphere(sphere_center: Point3, radius: f64, ray: &Ray) -> f64 {
-    let oc = sphere_center - ray.origin;
-    let a = dot(ray.dir, ray.dir);
-    let h = dot(ray.dir, oc);
-    let c = dot(oc, oc) - radius * radius;
-
-    let discriminant = h * h - a * c;
-
-    // calculate t, if no such t return a negative number
-    if discriminant < 0.0 {
-        return -1.0;
-    } else {
-        return (h - discriminant.sqrt()) / a;
-    }
-}
-
 fn ray_color(ray: Ray) -> Color {
-    let sphere_center = Point3::new(0.0, 0.0, -1.0);
-    let t = hit_sphere(sphere_center.clone(), 0.5, &ray);
-    if t > 0.0 {
-        let normal = (ray.at(t) - sphere_center).unit_vector();
+    let sphere = Sphere {
+        center: Point3::new(0.0, 0.0, -1.0),
+        radius: 0.5,
+    };
+    let rec = sphere.hit(&ray, f64::MIN, f64::MAX);
+    if let Some(rec) = rec {
+        let normal = (ray.at(rec.t) - sphere.center).unit_vector();
         return 0.5 * Color::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0);
     }
 
