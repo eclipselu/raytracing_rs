@@ -1,10 +1,9 @@
-use std::{
-    f64,
-    rc::Rc,
-};
+use std::{f64, rc::Rc};
 
 use raytracing_rs::{
-    camera::Camera, hittable::{Hittable_List, Sphere}, vec3::Point3
+    camera::Camera,
+    hittable::{Hittable_List, Sphere},
+    vec3::Point3,
 };
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
@@ -23,6 +22,7 @@ fn main() {
     }));
 
     // Camera
-    let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH);
-    camera.render(&world);
+    let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, 10);
+    let output_file = "out/2_spheres_antialias.ppm";
+    camera.render(&world, output_file).expect("render failed");
 }

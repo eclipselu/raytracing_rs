@@ -1,4 +1,9 @@
-use std::io::{self, Write, stdout};
+use std::{
+    fs::File,
+    io::{self, BufWriter, Write},
+};
+
+use rand::Rng;
 
 use crate::{
     hittable::{Hittable, Hittable_List},
@@ -7,10 +12,19 @@ use crate::{
     vec3::{Color, Point3, Vec3},
 };
 
+fn random_double() -> f64 {
+    let mut rng = rand::rng();
+    rng.random::<f64>()
+}
+
 fn write_color(mut w: impl Write, color: Color) -> io::Result<()> {
-    let ir = (color.x * 255.999) as u64;
-    let ig = (color.y * 255.999) as u64;
-    let ib = (color.z * 255.999) as u64;
+    let intentsity = Interval {
+        min: 0.0,
+        max: 0.999,
+    };
+    let ir = (intentsity.clamp(color.x) * 256.0) as u64;
+    let ig = (intentsity.clamp(color.y) * 256.0) as u64;
+    let ib = (intentsity.clamp(color.z) * 256.0) as u64;
 
     writeln!(w, "{} {} {}", ir, ig, ib)
 }
@@ -20,6 +34,8 @@ pub struct Camera {
     image_width: u64,
     image_height: u64,
 
+    sample_per_pixel: u8,
+
     center: Point3,      // Camera center
     pixel00_loc: Point3, // Location of pixel 0, 0
     pixel_delta_u: Vec3, // Offset to pixel to the right
@@ -27,7 +43,7 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u64) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: u64, sample_per_pixel: u8) -> Self {
         let image_height: u64 = (image_width as f64 / aspect_ratio) as u64;
         // We'll also have the y-axis go up, the x-axis to the right,
         // and the negative z-axis pointing in the viewing direction.
@@ -62,6 +78,8 @@ impl Camera {
             image_width: image_width,
             image_height: image_height,
 
+            sample_per_pixel: sample_per_pixel,
+
             center: camera_center,
             pixel00_loc: pixel00_loc,
             pixel_delta_u: pixel_delta_u,
@@ -88,26 +106,46 @@ impl Camera {
         color
     }
 
-    pub fn render(&self, world: &Hittable_List) {
+    // Construct a camera ray originating from the origin and directed at randomly sampled
+    // point around the pixel location (x, y)
+    fn get_ray(&self, x: u64, y: u64) -> Ray {
+        let offset = Vec3::new(random_double() - 0.5, random_double() - 0.5, 0.0);
+        let pixel_center = self.pixel00_loc
+            + (x as f64 + offset.x) * self.pixel_delta_u
+            + (y as f64 + offset.y) * self.pixel_delta_v;
+        let ray_direction = pixel_center - self.center;
+        let ray = Ray {
+            origin: self.center,
+            dir: ray_direction,
+        };
+
+        ray
+    }
+
+    pub fn render(&self, world: &Hittable_List, file_name: &str) -> io::Result<()> {
+        let file = File::create(file_name)?;
+        let mut out = BufWriter::new(file);
+
         // Render
-        println!("P3\n{} {}\n255", self.image_width, self.image_height);
+        writeln!(out, "P3\n{} {}\n255", self.image_width, self.image_height)?;
+
+        let pixel_samples_scale = 1.0 / self.sample_per_pixel as f64;
 
         for y in 0..self.image_height {
             eprint!("\rScanlines remaining: {} ", self.image_height - y);
 
             for x in 0..self.image_width {
-                let pixel_center = self.pixel00_loc
-                    + (x as f64 * self.pixel_delta_u)
-                    + (y as f64 * self.pixel_delta_v);
-                let ray_direction = pixel_center - self.center;
-                let ray = Ray {
-                    origin: self.center,
-                    dir: ray_direction,
-                };
-                let pixel_color = self.ray_color(&ray, &world);
-                let _ = write_color(stdout(), pixel_color);
+                let mut pixel_color = Color::new(0.0, 0.0, 0.0);
+
+                for _ in 0..self.sample_per_pixel {
+                    let ray = self.get_ray(x, y);
+                    pixel_color += self.ray_color(&ray, &world);
+                }
+                pixel_color *= pixel_samples_scale;
+                write_color(&mut out, pixel_color)?;
             }
         }
         eprintln!("\rDone.                 ");
+        Ok(())
     }
 }
