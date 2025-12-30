@@ -1,10 +1,11 @@
 use std::{
     f64,
     io::{self, Write, stdout},
+    rc::Rc,
 };
 
 use raytracing_rs::{
-    hittable::{Hittable, Sphere},
+    hittable::{Hittable, Hittable_List, Sphere},
     ray::Ray,
     vec3::{Color, Point3, Vec3},
 };
@@ -21,15 +22,10 @@ fn write_color(mut w: impl Write, color: Color) -> io::Result<()> {
     writeln!(w, "{} {} {}", ir, ig, ib)
 }
 
-fn ray_color(ray: Ray) -> Color {
-    let sphere = Sphere {
-        center: Point3::new(0.0, 0.0, -1.0),
-        radius: 0.5,
-    };
-    let rec = sphere.hit(&ray, f64::MIN, f64::MAX);
+fn ray_color(ray: &Ray, world: &Hittable_List) -> Color {
+    let rec = world.hit(&ray, 0.0, f64::MAX);
     if let Some(rec) = rec {
-        let normal = (ray.at(rec.t) - sphere.center).unit_vector();
-        return 0.5 * Color::new(normal.x + 1.0, normal.y + 1.0, normal.z + 1.0);
+        return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
     }
 
     let unit_direction = ray.dir.unit_vector();
@@ -68,6 +64,17 @@ fn main() {
     //       └──────────┘
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
+    // World
+    let mut world = Hittable_List::new();
+    world.add(Rc::new(Sphere {
+        center: Point3::new(0.0, 0.0, -1.0),
+        radius: 0.5,
+    }));
+    world.add(Rc::new(Sphere {
+        center: Point3::new(0.0, -100.5, -1.0),
+        radius: 100.0,
+    }));
+
     // Render
     println!("P3\n{} {}\n255", IMAGE_WIDTH, IMAGE_HEIGHT);
 
@@ -82,7 +89,7 @@ fn main() {
                 origin: camera_center,
                 dir: ray_direction,
             };
-            let pixel_color = ray_color(ray);
+            let pixel_color = ray_color(&ray, &world);
             let _ = write_color(stdout(), pixel_color);
         }
     }
