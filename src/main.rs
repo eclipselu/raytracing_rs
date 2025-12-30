@@ -8,10 +8,23 @@ use raytracing_rs::{
     vec3::{Color, Point3, Vec3, dot},
 };
 
+#[derive(Clone, Copy, Debug)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
     pub t: f64,
+    pub front_face: bool,
+}
+
+impl HitRecord {
+    fn set_face_normal(&mut self, ray: &Ray, outward_normal: Vec3) {
+        self.front_face = dot(ray.dir, outward_normal) < 0.0;
+        self.normal = if self.front_face {
+            outward_normal
+        } else {
+            -outward_normal
+        };
+    }
 }
 
 pub trait Hittable {
@@ -48,11 +61,13 @@ impl Hittable for Sphere {
 
         let point = ray.at(root);
         let normal = (point - self.center) / self.radius;
-        let rec = HitRecord {
+        let mut rec = HitRecord {
             p: point,
             t: root,
             normal: normal,
+            front_face: true,
         };
+        rec.set_face_normal(&ray, normal);
 
         Option::Some(rec)
     }
