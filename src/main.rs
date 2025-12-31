@@ -22,9 +22,11 @@ fn main() {
     });
     let material_left = Rc::new(Metal {
         albedo: Color::new(0.8, 0.8, 0.8),
+        fuzz: 0.2,
     });
     let material_right = Rc::new(Metal {
         albedo: Color::new(0.8, 0.6, 0.2),
+        fuzz: 1.0,
     });
 
     world.add(Rc::new(Sphere {
@@ -50,6 +52,6 @@ fn main() {
 
     // Camera
     let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, 10, 50);
-    let output_file = "out/materials.ppm";
+    let output_file = "out/materials_fuzz.ppm";
     camera.render(&world, output_file).expect("render failed");
 }

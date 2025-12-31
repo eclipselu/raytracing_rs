@@ -114,6 +114,7 @@ impl Camera {
         let unit_direction = ray.dir.unit_vector();
         let a = 0.5 * (unit_direction.y + 1.0);
         // TODO: lerp function
+        // Background color
         (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
     }
 
