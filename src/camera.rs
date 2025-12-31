@@ -3,19 +3,13 @@ use std::{
     io::{self, BufWriter, Write},
 };
 
-use rand::Rng;
-
 use crate::{
     hittable::{Hittable, Hittable_List},
     interval::Interval,
     ray::Ray,
+    utils::random_double,
     vec3::{Color, Point3, Vec3},
 };
-
-fn random_double() -> f64 {
-    let mut rng = rand::rng();
-    rng.random::<f64>()
-}
 
 fn write_color(mut w: impl Write, color: Color) -> io::Result<()> {
     let intentsity = Interval {
@@ -95,8 +89,14 @@ impl Camera {
                 max: f64::MAX,
             },
         );
+
         if let Some(rec) = rec {
-            return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
+            let direction = Vec3::random_on_hemisphere(&rec.normal);
+            let new_ray = Ray {
+                origin: rec.p,
+                dir: direction,
+            };
+            return 0.5 * self.ray_color(&new_ray, world);
         }
 
         let unit_direction = ray.dir.unit_vector();
