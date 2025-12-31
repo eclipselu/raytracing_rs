@@ -8,8 +8,8 @@ use crate::{
     hittable::{Hittable, Hittable_List},
     interval::Interval,
     ray::Ray,
-    utils::random_double,
-    vec3::{Color, Point3, Vec3, dot},
+    utils::{linear_to_gamma, random_double},
+    vec3::{Color, Point3, Vec3},
 };
 
 fn write_color(mut w: impl Write, color: Color) -> io::Result<()> {
@@ -17,9 +17,13 @@ fn write_color(mut w: impl Write, color: Color) -> io::Result<()> {
         min: 0.0,
         max: 0.999,
     };
-    let ir = (intentsity.clamp(color.x) * 256.0) as u64;
-    let ig = (intentsity.clamp(color.y) * 256.0) as u64;
-    let ib = (intentsity.clamp(color.z) * 256.0) as u64;
+
+    let r = linear_to_gamma(color.x);
+    let g = linear_to_gamma(color.y);
+    let b = linear_to_gamma(color.z);
+    let ir = (intentsity.clamp(r) * 256.0) as u64;
+    let ig = (intentsity.clamp(g) * 256.0) as u64;
+    let ib = (intentsity.clamp(b) * 256.0) as u64;
 
     writeln!(w, "{} {} {}", ir, ig, ib)
 }
