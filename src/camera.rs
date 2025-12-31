@@ -34,10 +34,12 @@ pub struct Camera {
     pixel00_loc: Point3, // Location of pixel 0, 0
     pixel_delta_u: Vec3, // Offset to pixel to the right
     pixel_delta_v: Vec3, // Offset to pixel below
+
+    max_depth: i16,
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u64, sample_per_pixel: u8) -> Self {
+    pub fn new(aspect_ratio: f64, image_width: u64, sample_per_pixel: u8, max_depth: i16) -> Self {
         let image_height: u64 = (image_width as f64 / aspect_ratio) as u64;
         // We'll also have the y-axis go up, the x-axis to the right,
         // and the negative z-axis pointing in the viewing direction.
@@ -78,10 +80,15 @@ impl Camera {
             pixel00_loc: pixel00_loc,
             pixel_delta_u: pixel_delta_u,
             pixel_delta_v: pixel_delta_v,
+            max_depth: max_depth,
         }
     }
 
-    fn ray_color(&self, ray: &Ray, world: &Hittable_List) -> Color {
+    fn ray_color(&self, ray: &Ray, world: &Hittable_List, depth: i16) -> Color {
+        if depth <= 0 {
+            return Color::new(0.0, 0.0, 0.0);
+        }
+
         let rec = world.hit(
             &ray,
             Interval {
@@ -96,7 +103,7 @@ impl Camera {
                 origin: rec.p,
                 dir: direction,
             };
-            return 0.5 * self.ray_color(&new_ray, world);
+            return 0.5 * self.ray_color(&new_ray, world, depth - 1);
         }
 
         let unit_direction = ray.dir.unit_vector();
@@ -139,7 +146,7 @@ impl Camera {
 
                 for _ in 0..self.sample_per_pixel {
                     let ray = self.get_ray(x, y);
-                    pixel_color += self.ray_color(&ray, &world);
+                    pixel_color += self.ray_color(&ray, &world, self.max_depth);
                 }
                 pixel_color *= pixel_samples_scale;
                 write_color(&mut out, pixel_color)?;

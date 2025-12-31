@@ -22,7 +22,7 @@ fn main() {
     }));
 
     // Camera
-    let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, 10);
+    let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, 10, 50);
     let output_file = "out/simple_diffuse.ppm";
     camera.render(&world, output_file).expect("render failed");
 }
