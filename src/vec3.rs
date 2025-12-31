@@ -29,6 +29,15 @@ impl Vec3 {
         self / self.length()
     }
 
+    pub fn near_zero(self) -> bool {
+        let eps = 1e-8;
+        self.x.abs() < eps && self.y.abs() < eps && self.z.abs() < eps
+    }
+
+    pub fn reflect(self, normal: Vec3) -> Vec3 {
+        self - 2.0 * dot(self, normal) * normal
+    }
+
     pub fn random() -> Vec3 {
         Vec3 {
             x: random_double(),
@@ -55,9 +64,9 @@ impl Vec3 {
         }
     }
 
-    pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
+    pub fn random_on_hemisphere(normal: Vec3) -> Vec3 {
         let v = Vec3::random_unit_vector();
-        if dot(v, *normal) > 0.0 { v } else { -v }
+        if dot(v, normal) > 0.0 { v } else { -v }
     }
 }
 impl Index<usize> for Vec3 {
@@ -128,6 +137,18 @@ impl Mul<f64> for Vec3 {
             x: t * self.x,
             y: t * self.y,
             z: t * self.z,
+        }
+    }
+}
+
+impl Mul<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, v: Vec3) -> Self::Output {
+        Vec3 {
+            x: v.x * self.x,
+            y: v.y * self.y,
+            z: v.z * self.z,
         }
     }
 }

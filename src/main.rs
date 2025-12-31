@@ -3,7 +3,8 @@ use std::{f64, rc::Rc};
 use raytracing_rs::{
     camera::Camera,
     hittable::{Hittable_List, Sphere},
-    vec3::Point3,
+    material::{Lambertian, Metal},
+    vec3::{Color, Point3},
 };
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
@@ -12,17 +13,43 @@ const IMAGE_WIDTH: u64 = 400;
 fn main() {
     // World
     let mut world = Hittable_List::new();
-    world.add(Rc::new(Sphere {
-        center: Point3::new(0.0, 0.0, -1.0),
-        radius: 0.5,
-    }));
+
+    let material_ground = Rc::new(Lambertian {
+        albedo: Color::new(0.8, 0.8, 0.0),
+    });
+    let material_center = Rc::new(Lambertian {
+        albedo: Color::new(0.1, 0.2, 0.5),
+    });
+    let material_left = Rc::new(Metal {
+        albedo: Color::new(0.8, 0.8, 0.8),
+    });
+    let material_right = Rc::new(Metal {
+        albedo: Color::new(0.8, 0.6, 0.2),
+    });
+
     world.add(Rc::new(Sphere {
         center: Point3::new(0.0, -100.5, -1.0),
         radius: 100.0,
+        material: material_ground,
+    }));
+    world.add(Rc::new(Sphere {
+        center: Point3::new(0.0, 0.0, -1.2),
+        radius: 0.5,
+        material: material_center,
+    }));
+    world.add(Rc::new(Sphere {
+        center: Point3::new(-1.0, 0.0, -1.0),
+        radius: 0.5,
+        material: material_left,
+    }));
+    world.add(Rc::new(Sphere {
+        center: Point3::new(1.0, 0.0, -1.0),
+        radius: 0.5,
+        material: material_right,
     }));
 
     // Camera
     let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, 10, 50);
-    let output_file = "out/gamme_correction.ppm";
+    let output_file = "out/materials.ppm";
     camera.render(&world, output_file).expect("render failed");
 }
