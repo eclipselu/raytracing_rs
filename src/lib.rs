@@ -1,7 +1,8 @@
 #![allow(nonstandard_style)]
 
-pub mod hittable;
-pub mod interval;
-pub mod ray;
-pub mod vec3;
 pub mod camera;
+pub mod hittable;
+mod interval;
+mod ray;
+mod utils;
+pub mod vec3;
