@@ -76,16 +76,16 @@ impl Camera {
 
         Camera {
             _aspect_ratio: aspect_ratio,
-            image_width: image_width,
-            image_height: image_height,
+            image_width,
+            image_height,
 
-            sample_per_pixel: sample_per_pixel,
+            sample_per_pixel,
 
             center: camera_center,
-            pixel00_loc: pixel00_loc,
-            pixel_delta_u: pixel_delta_u,
-            pixel_delta_v: pixel_delta_v,
-            max_depth: max_depth,
+            pixel00_loc,
+            pixel_delta_u,
+            pixel_delta_v,
+            max_depth,
         }
     }
 
@@ -95,7 +95,7 @@ impl Camera {
         }
 
         let rec = world.hit(
-            &ray,
+            ray,
             Interval {
                 min: 0.001,
                 max: f64::INFINITY,
@@ -103,22 +103,18 @@ impl Camera {
         );
 
         if let Some(rec) = rec {
-            // NOTE: this also generates a direction on the same hemisphere as the normal
-            // but the distribution changed, the added normal vector shifts the distribution towards the normal,
-            // it is no longer the uniform distribution.
-            let direction = rec.normal + Vec3::random_unit_vector();
-            let new_ray = Ray {
-                origin: rec.p + rec.normal * 1e-3, // add offset to prevent shadow acne
-                dir: direction,
-            };
-            return 0.5 * self.ray_color(&new_ray, world, depth - 1);
+            let (attenuation, scattered_ray) = rec.material.scatter(ray, &rec);
+            if let Some(scattered_ray) = scattered_ray {
+                return attenuation * self.ray_color(&scattered_ray, world, depth - 1);
+            }
+            return attenuation; // default (0, 0, 0)
+            // return Color::new(0.0, 0.0, 0.0);
         }
 
         let unit_direction = ray.dir.unit_vector();
         let a = 0.5 * (unit_direction.y + 1.0);
         // TODO: lerp function
-        let color = (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0);
-        color
+        (1.0 - a) * Color::new(1.0, 1.0, 1.0) + a * Color::new(0.5, 0.7, 1.0)
     }
 
     // Construct a camera ray originating from the origin and directed at randomly sampled
@@ -129,12 +125,11 @@ impl Camera {
             + (x as f64 + offset.x) * self.pixel_delta_u
             + (y as f64 + offset.y) * self.pixel_delta_v;
         let ray_direction = pixel_center - self.center;
-        let ray = Ray {
+
+        Ray {
             origin: self.center,
             dir: ray_direction,
-        };
-
-        ray
+        }
     }
 
     pub fn render(&self, world: &Hittable_List, file_name: &str) -> io::Result<()> {
@@ -154,7 +149,7 @@ impl Camera {
 
                 for _ in 0..self.sample_per_pixel {
                     let ray = self.get_ray(x, y);
-                    pixel_color += self.ray_color(&ray, &world, self.max_depth);
+                    pixel_color += self.ray_color(&ray, world, self.max_depth);
                 }
                 pixel_color *= pixel_samples_scale;
                 write_color(&mut out, pixel_color)?;
