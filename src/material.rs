@@ -1,7 +1,7 @@
 use crate::{
     hittable::Hit_Record,
     ray::Ray,
-    vec3::{Color, Vec3, dot},
+    vec3::{Color, Vec3, dot, reflect, refract},
 };
 
 pub trait Material {
@@ -42,7 +42,7 @@ pub struct Metal {
 
 impl Material for Metal {
     fn scatter(&self, ray_in: &Ray, rec: &Hit_Record) -> (Color, Option<Ray>) {
-        let mut reflected = ray_in.dir.reflect(rec.normal);
+        let mut reflected = reflect(ray_in.dir, rec.normal);
         reflected = reflected.unit_vector() + self.fuzz * Vec3::random_unit_vector();
         let scattered_ray = Ray {
             origin: rec.p,
@@ -54,5 +54,30 @@ impl Material for Metal {
         } else {
             (self.albedo, Option::None)
         }
+    }
+}
+
+pub struct Dielectric {
+    pub refraction_index: f64,
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, ray_in: &Ray, rec: &Hit_Record) -> (Color, Option<Ray>) {
+        let attenuation = Color::new(1.0, 1.0, 1.0);
+        let ri = if rec.front_face {
+            1.0 / self.refraction_index
+        } else {
+            self.refraction_index
+        };
+
+        let unit_direction = ray_in.dir.unit_vector();
+        let refracted = refract(unit_direction, rec.normal, ri);
+
+        let scattered_ray = Ray {
+            origin: rec.p,
+            dir: refracted,
+        };
+
+        (attenuation, Option::Some(scattered_ray))
     }
 }

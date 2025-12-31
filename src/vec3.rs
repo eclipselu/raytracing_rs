@@ -34,10 +34,6 @@ impl Vec3 {
         self.x.abs() < eps && self.y.abs() < eps && self.z.abs() < eps
     }
 
-    pub fn reflect(self, normal: Vec3) -> Vec3 {
-        self - 2.0 * dot(self, normal) * normal
-    }
-
     pub fn random() -> Vec3 {
         Vec3 {
             x: random_double(),
@@ -195,4 +191,16 @@ impl DivAssign<f64> for Vec3 {
 
 pub fn dot(v1: Vec3, v2: Vec3) -> f64 {
     v1.x * v2.x + v1.y * v2.y + v1.z * v2.z
+}
+
+pub fn reflect(v: Vec3, normal: Vec3) -> Vec3 {
+    v - 2.0 * dot(v, normal) * normal
+}
+
+pub fn refract(uv: Vec3, normal: Vec3, eta_over_etap: f64) -> Vec3 {
+    let cos_theta = dot(-uv, normal).min(1.0);
+    let r_out_perp = eta_over_etap * (uv + cos_theta * normal);
+    let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * normal;
+
+    r_out_perp + r_out_parallel
 }
