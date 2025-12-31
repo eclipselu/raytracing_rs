@@ -99,7 +99,10 @@ impl Camera {
         );
 
         if let Some(rec) = rec {
-            let direction = Vec3::random_on_hemisphere(&rec.normal);
+            // NOTE: this also generates a direction on the same hemisphere as the normal
+            // but the distribution changed, the added normal vector shifts the distribution towards the normal,
+            // it is no longer the uniform distribution.
+            let direction = rec.normal + Vec3::random_unit_vector();
             let new_ray = Ray {
                 origin: rec.p + rec.normal * 1e-3, // add offset to prevent shadow acne
                 dir: direction,
