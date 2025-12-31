@@ -1,4 +1,5 @@
 use std::{
+    f64,
     fs::File,
     io::{self, BufWriter, Write},
 };
@@ -8,7 +9,7 @@ use crate::{
     interval::Interval,
     ray::Ray,
     utils::random_double,
-    vec3::{Color, Point3, Vec3},
+    vec3::{Color, Point3, Vec3, dot},
 };
 
 fn write_color(mut w: impl Write, color: Color) -> io::Result<()> {
@@ -92,15 +93,15 @@ impl Camera {
         let rec = world.hit(
             &ray,
             Interval {
-                min: 0.0,
-                max: f64::MAX,
+                min: 0.001,
+                max: f64::INFINITY,
             },
         );
 
         if let Some(rec) = rec {
             let direction = Vec3::random_on_hemisphere(&rec.normal);
             let new_ray = Ray {
-                origin: rec.p,
+                origin: rec.p + rec.normal * 1e-3, // add offset to prevent shadow acne
                 dir: direction,
             };
             return 0.5 * self.ray_color(&new_ray, world, depth - 1);
