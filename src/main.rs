@@ -3,7 +3,7 @@ use std::{f64, rc::Rc};
 use raytracing_rs::{
     camera::Camera,
     hittable::{Hittable_List, Sphere},
-    material::{Lambertian, Metal},
+    material::{Dielectric, Lambertian, Metal},
     vec3::{Color, Point3},
 };
 
@@ -20,9 +20,8 @@ fn main() {
     let material_center = Rc::new(Lambertian {
         albedo: Color::new(0.1, 0.2, 0.5),
     });
-    let material_left = Rc::new(Metal {
-        albedo: Color::new(0.8, 0.8, 0.8),
-        fuzz: 0.2,
+    let material_left = Rc::new(Dielectric {
+        refraction_index: 1.5,
     });
     let material_right = Rc::new(Metal {
         albedo: Color::new(0.8, 0.6, 0.2),
@@ -52,6 +51,6 @@ fn main() {
 
     // Camera
     let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, 10, 50);
-    let output_file = "out/materials_fuzz.ppm";
+    let output_file = "out/dielectric_glass.ppm";
     camera.render(&world, output_file).expect("render failed");
 }
