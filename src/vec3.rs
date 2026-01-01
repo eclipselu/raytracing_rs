@@ -193,6 +193,14 @@ pub fn dot(v1: Vec3, v2: Vec3) -> f64 {
     v1.x * v2.x + v1.y * v2.y + v1.z * v2.z
 }
 
+pub fn cross(u: Vec3, v: Vec3) -> Vec3 {
+    Vec3 {
+        x: u[1] * v[2] - u[2] * v[1],
+        y: u[2] * v[0] - u[0] * v[2],
+        z: u[0] * v[1] - u[1] * v[0],
+    }
+}
+
 pub fn reflect(v: Vec3, normal: Vec3) -> Vec3 {
     v - 2.0 * dot(v, normal) * normal
 }
