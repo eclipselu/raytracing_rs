@@ -23,6 +23,9 @@ fn main() {
     let material_left = Rc::new(Dielectric {
         refraction_index: 1.5,
     });
+    let material_bubble = Rc::new(Dielectric {
+        refraction_index: 1.0 / 1.5,
+    });
     let material_right = Rc::new(Metal {
         albedo: Color::new(0.8, 0.6, 0.2),
         fuzz: 1.0,
@@ -44,6 +47,11 @@ fn main() {
         material: material_left,
     }));
     world.add(Rc::new(Sphere {
+        center: Point3::new(-1.0, 0.0, -1.0),
+        radius: 0.4,
+        material: material_bubble,
+    }));
+    world.add(Rc::new(Sphere {
         center: Point3::new(1.0, 0.0, -1.0),
         radius: 0.5,
         material: material_right,
@@ -51,6 +59,6 @@ fn main() {
 
     // Camera
     let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, 10, 50);
-    let output_file = "out/dielectric_glass.ppm";
+    let output_file = "out/hollow_glass_sphere.ppm";
     camera.render(&world, output_file).expect("render failed");
 }

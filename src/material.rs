@@ -1,6 +1,7 @@
 use crate::{
     hittable::Hit_Record,
     ray::Ray,
+    utils::random_double,
     vec3::{Color, Vec3, dot, reflect, refract},
 };
 
@@ -61,6 +62,16 @@ pub struct Dielectric {
     pub refraction_index: f64,
 }
 
+impl Dielectric {
+    // calculates the reflectance based on Fresnel equation, approximated by Schlick's method
+    fn reflectance(cos_theta: f64, refraction_index: f64) -> f64 {
+        let mut r0 = (1.0 - refraction_index) / (1.0 + refraction_index);
+        r0 = r0 * r0;
+
+        r0 + (1.0 - r0) * (1.0 - cos_theta).powf(5.0)
+    }
+}
+
 impl Material for Dielectric {
     fn scatter(&self, ray_in: &Ray, rec: &Hit_Record) -> (Color, Option<Ray>) {
         let attenuation = Color::new(1.0, 1.0, 1.0);
@@ -71,11 +82,27 @@ impl Material for Dielectric {
         };
 
         let unit_direction = ray_in.dir.unit_vector();
-        let refracted = refract(unit_direction, rec.normal, ri);
+
+        let cos_theta = dot(-unit_direction, rec.normal).min(1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        let cannot_refract = ri * sin_theta > 1.0;
+
+        // total internal reflection
+        let direction = if cannot_refract {
+            reflect(unit_direction, rec.normal)
+        } else {
+            // Monte-carlo ray tracing
+            // samples energy based on probability
+            if Dielectric::reflectance(cos_theta, ri) > random_double() {
+                reflect(unit_direction, rec.normal)
+            } else {
+                refract(unit_direction, rec.normal, ri)
+            }
+        };
 
         let scattered_ray = Ray {
             origin: rec.p,
-            dir: refracted,
+            dir: direction,
         };
 
         (attenuation, Option::Some(scattered_ray))
