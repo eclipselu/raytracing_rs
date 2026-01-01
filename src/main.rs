@@ -58,7 +58,7 @@ fn main() {
     }));
 
     // Camera
-    let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, 10, 50);
-    let output_file = "out/hollow_glass_sphere.ppm";
+    let camera = Camera::new(ASPECT_RATIO, IMAGE_WIDTH, 90.0, 10, 50);
+    let output_file = "out/wide_angle_view.ppm";
     camera.render(&world, output_file).expect("render failed");
 }

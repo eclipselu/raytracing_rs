@@ -8,7 +8,7 @@ use crate::{
     hittable::{Hittable, Hittable_List},
     interval::Interval,
     ray::Ray,
-    utils::{linear_to_gamma, random_double},
+    utils::{degrees_to_radian, linear_to_gamma, random_double},
     vec3::{Color, Point3, Vec3},
 };
 
@@ -36,6 +36,7 @@ pub struct Camera {
     sample_per_pixel: u8,
 
     center: Point3,      // Camera center
+    vfov: f64,           // vertical view angle (field of view)
     pixel00_loc: Point3, // Location of pixel 0, 0
     pixel_delta_u: Vec3, // Offset to pixel to the right
     pixel_delta_v: Vec3, // Offset to pixel below
@@ -44,7 +45,13 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: u64, sample_per_pixel: u8, max_depth: i16) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: u64,
+        vfov: f64,
+        sample_per_pixel: u8,
+        max_depth: i16,
+    ) -> Self {
         let image_height: u64 = (image_width as f64 / aspect_ratio) as u64;
         // We'll also have the y-axis go up, the x-axis to the right,
         // and the negative z-axis pointing in the viewing direction.
@@ -52,7 +59,9 @@ impl Camera {
 
         // Camera
         let focal_length: f64 = 1.0;
-        let viewport_height: f64 = 2.0;
+        let theta = degrees_to_radian(vfov);
+        let h = (theta / 2.0).tan();
+        let viewport_height: f64 = focal_length * h * 2.0;
         let viewport_width = viewport_height * aspect_ratio;
         let camera_center = Point3::new(0.0, 0.0, 0.0);
 
@@ -82,6 +91,7 @@ impl Camera {
             sample_per_pixel,
 
             center: camera_center,
+            vfov,
             pixel00_loc,
             pixel_delta_u,
             pixel_delta_v,
