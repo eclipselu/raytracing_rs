@@ -61,7 +61,7 @@ fn main() {
     let lookfrom = Point3::new(-2.0, 2.0, 1.0);
     let lookat = Point3::new(0.0, 0.0, -1.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
-    let vfov = 90.0;
+    let vfov = 20.0;
     let camera = Camera::new(
         ASPECT_RATIO,
         IMAGE_WIDTH,
@@ -72,6 +72,6 @@ fn main() {
         10,
         50,
     );
-    let output_file = "out/alternative_view_point.ppm";
+    let output_file = "out/alternative_view_point_20fov.ppm";
     camera.render(&world, output_file).expect("render failed");
 }
