@@ -3,63 +3,95 @@ use std::{f64, rc::Rc};
 use raytracing_rs::{
     camera::Camera,
     hittable::{Hittable_List, Sphere},
-    material::{Dielectric, Lambertian, Metal},
+    material::{Dielectric, Lambertian, Material, Metal},
+    utils::{random_double, random_double_range},
     vec3::{Color, Point3, Vec3},
 };
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const IMAGE_WIDTH: u64 = 400;
+const IMAGE_WIDTH: u64 = 600;
+const SAMPLES_PER_PIXEL: u64 = 500;
+const MAX_DEPTH: i16 = 50;
 
 fn main() {
     // World
     let mut world = Hittable_List::new();
 
-    let material_ground = Rc::new(Lambertian {
-        albedo: Color::new(0.8, 0.8, 0.0),
+    let ground_material = Rc::new(Lambertian {
+        albedo: Color::new(0.5, 0.5, 0.5),
     });
-    let material_center = Rc::new(Lambertian {
-        albedo: Color::new(0.1, 0.2, 0.5),
-    });
-    let material_left = Rc::new(Dielectric {
+    world.add(Rc::new(Sphere {
+        center: Point3::new(0.0, -1000.0, 0.0),
+        radius: 1000.0,
+        material: ground_material,
+    }));
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let choose_mat = random_double();
+            let center = Point3::new(
+                a as f64 + 0.9 * random_double(),
+                0.2,
+                b as f64 + 0.9 * random_double(),
+            );
+
+            if (center - Point3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+                let sphere_material: Rc<dyn Material> = if choose_mat < 0.8 {
+                    // diffuse
+                    let albedo = Color::random() * Color::random();
+                    Rc::new(Lambertian { albedo })
+                } else if choose_mat < 0.95 {
+                    // metal
+                    let albedo = Color::random_range(0.5, 1.0);
+                    let fuzz = random_double_range(0.0, 0.5);
+                    Rc::new(Metal { albedo, fuzz })
+                } else {
+                    // glass
+                    Rc::new(Dielectric {
+                        refraction_index: 1.5,
+                    })
+                };
+
+                world.add(Rc::new(Sphere {
+                    center,
+                    radius: 0.2,
+                    material: sphere_material,
+                }));
+            }
+        }
+    }
+
+    let material1: Rc<dyn Material> = Rc::new(Dielectric {
         refraction_index: 1.5,
     });
-    let material_bubble = Rc::new(Dielectric {
-        refraction_index: 1.0 / 1.5,
-    });
-    let material_right = Rc::new(Metal {
-        albedo: Color::new(0.8, 0.6, 0.2),
-        fuzz: 1.0,
-    });
+    world.add(Rc::new(Sphere {
+        center: Point3::new(0.0, 1.0, 0.0),
+        radius: 1.0,
+        material: material1,
+    }));
 
+    let material2: Rc<dyn Material> = Rc::new(Lambertian {
+        albedo: Color::new(0.4, 0.2, 0.1),
+    });
     world.add(Rc::new(Sphere {
-        center: Point3::new(0.0, -100.5, -1.0),
-        radius: 100.0,
-        material: material_ground,
+        center: Point3::new(-4.0, 1.0, 0.0),
+        radius: 1.0,
+        material: material2,
     }));
+
+    let material3: Rc<dyn Material> = Rc::new(Metal {
+        albedo: Color::new(0.7, 0.6, 0.5),
+        fuzz: 0.0,
+    });
     world.add(Rc::new(Sphere {
-        center: Point3::new(0.0, 0.0, -1.2),
-        radius: 0.5,
-        material: material_center,
-    }));
-    world.add(Rc::new(Sphere {
-        center: Point3::new(-1.0, 0.0, -1.0),
-        radius: 0.5,
-        material: material_left,
-    }));
-    world.add(Rc::new(Sphere {
-        center: Point3::new(-1.0, 0.0, -1.0),
-        radius: 0.4,
-        material: material_bubble,
-    }));
-    world.add(Rc::new(Sphere {
-        center: Point3::new(1.0, 0.0, -1.0),
-        radius: 0.5,
-        material: material_right,
+        center: Point3::new(4.0, 1.0, 0.0),
+        radius: 1.0,
+        material: material3,
     }));
 
     // Camera
-    let lookfrom = Point3::new(-2.0, 2.0, 1.0);
-    let lookat = Point3::new(0.0, 0.0, -1.0);
+    let lookfrom = Point3::new(13.0, 2.0, 3.0);
+    let lookat = Point3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let vfov = 20.0;
     let camera = Camera::new(
@@ -69,9 +101,9 @@ fn main() {
         lookfrom,
         lookat,
         vup,
-        10,
-        50,
+        SAMPLES_PER_PIXEL,
+        MAX_DEPTH,
     );
-    let output_file = "out/alternative_view_point_20fov.ppm";
+    let output_file = "out/random_scene.ppm";
     camera.render(&world, output_file).expect("render failed");
 }

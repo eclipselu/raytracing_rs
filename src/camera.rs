@@ -33,7 +33,7 @@ pub struct Camera {
     image_width: u64,
     image_height: u64,
 
-    sample_per_pixel: u8,
+    sample_per_pixel: u64,
 
     center: Point3,      // Camera center, point camera looking from
     lookat: Point3,      // Point camera looking at
@@ -59,7 +59,7 @@ impl Camera {
         lookfrom: Point3,
         lookat: Point3,
         vup: Vec3,
-        sample_per_pixel: u8,
+        sample_per_pixel: u64,
         max_depth: i16,
     ) -> Self {
         let image_height: u64 = (image_width as f64 / aspect_ratio) as u64;
