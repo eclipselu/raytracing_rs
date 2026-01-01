@@ -9,7 +9,7 @@ use crate::{
     interval::Interval,
     ray::Ray,
     utils::{degrees_to_radian, linear_to_gamma, random_double},
-    vec3::{Color, Point3, Vec3},
+    vec3::{Color, Point3, Vec3, cross},
 };
 
 fn write_color(mut w: impl Write, color: Color) -> io::Result<()> {
@@ -35,11 +35,18 @@ pub struct Camera {
 
     sample_per_pixel: u8,
 
-    center: Point3,      // Camera center
+    center: Point3,      // Camera center, point camera looking from
+    lookat: Point3,      // Point camera looking at
+    vup: Vec3,           // Camera relative "up" direction
     vfov: f64,           // vertical view angle (field of view)
     pixel00_loc: Point3, // Location of pixel 0, 0
     pixel_delta_u: Vec3, // Offset to pixel to the right
     pixel_delta_v: Vec3, // Offset to pixel below
+
+    // Camera frame basis vectors
+    u: Vec3,
+    v: Vec3,
+    w: Vec3,
 
     max_depth: i16,
 }
@@ -49,6 +56,9 @@ impl Camera {
         aspect_ratio: f64,
         image_width: u64,
         vfov: f64,
+        lookfrom: Point3,
+        lookat: Point3,
+        vup: Vec3,
         sample_per_pixel: u8,
         max_depth: i16,
     ) -> Self {
@@ -58,26 +68,29 @@ impl Camera {
         // (This is commonly referred to as right-handed coordinates.)
 
         // Camera
-        let focal_length: f64 = 1.0;
+        let focal_length: f64 = (lookfrom - lookat).length();
         let theta = degrees_to_radian(vfov);
         let h = (theta / 2.0).tan();
         let viewport_height: f64 = focal_length * h * 2.0;
         let viewport_width = viewport_height * aspect_ratio;
-        let camera_center = Point3::new(0.0, 0.0, 0.0);
+
+        // basis vectors
+        let w = (lookfrom - lookat).unit_vector();
+        let u = cross(vup, w).unit_vector();
+        let v = cross(w, u);
 
         // viewport vectors
         // horizontal
-        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
+        let viewport_u = viewport_width * u;
         // vertical, y-axis pointing up
-        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+        let viewport_v = viewport_height * -v;
 
         // Horizontal and vertical delta vectors from pixel to pixel
         let pixel_delta_u = viewport_u / (image_width as f64);
         let pixel_delta_v = viewport_v / (image_height as f64);
 
         // locations of the upper left pixel
-        let viewport_upper_left =
-            camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+        let viewport_upper_left = lookfrom - focal_length * w - viewport_u / 2.0 - viewport_v / 2.0;
         // (0,0) ┌──────────┐
         //       │    •     │ ← center
         //       └──────────┘
@@ -90,11 +103,16 @@ impl Camera {
 
             sample_per_pixel,
 
-            center: camera_center,
+            center: lookfrom,
             vfov,
+            vup,
+            lookat,
             pixel00_loc,
             pixel_delta_u,
             pixel_delta_v,
+            u,
+            v,
+            w,
             max_depth,
         }
     }
