@@ -5,5 +5,5 @@ pub mod hittable;
 mod interval;
 pub mod material;
 mod ray;
-mod utils;
+pub mod utils;
 pub mod vec3;
