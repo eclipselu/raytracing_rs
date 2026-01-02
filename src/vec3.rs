@@ -64,6 +64,19 @@ impl Vec3 {
         let v = Vec3::random_unit_vector();
         if dot(v, normal) > 0.0 { v } else { -v }
     }
+
+    pub fn random_in_unit_disk() -> Vec3 {
+        loop {
+            let v = Vec3::new(
+                random_double_range(-1.0, 1.0),
+                random_double_range(-1.0, 1.0),
+                0.0,
+            );
+            if v.length_squared() < 1.0 {
+                return v;
+            }
+        }
+    }
 }
 impl Index<usize> for Vec3 {
     type Output = f64;
