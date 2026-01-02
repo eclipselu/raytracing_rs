@@ -1,0 +1,1 @@
+- Video explaining aperture and depth of field (defocus blur): https://www.youtube.com/watch?v=Bs9L_9iBVLQ
