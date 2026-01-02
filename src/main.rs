@@ -62,8 +62,7 @@ fn main() {
     let lookat = Point3::new(0.0, 0.0, -1.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let vfov = 20.0;
-    let defocus_angle = 10.0;
-    let focus_dist = 4.0;
+    let defocus_radius = 0.3;
 
     let camera = Camera::new(
         ASPECT_RATIO,
@@ -72,11 +71,10 @@ fn main() {
         lookfrom,
         lookat,
         vup,
-        defocus_angle,
-        focus_dist,
+        defocus_radius,
         10,
         50,
     );
-    let output_file = "out/defocus_blur.ppm";
+    let output_file = "out/defocus_blur_alternative.ppm";
     camera.render(&world, output_file).expect("render failed");
 }

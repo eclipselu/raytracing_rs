@@ -49,8 +49,6 @@ pub struct Camera {
     w: Vec3,
 
     // Defocus disk
-    defocus_angle: f64, // angle of the cone with the apex at viewport center, for easy
-    focus_dist: f64, // from camera lookfrom point to plane of focus, here it's the viewport plane
     defocus_radius: f64,
 
     max_depth: i16,
@@ -64,8 +62,7 @@ impl Camera {
         lookfrom: Point3,
         lookat: Point3,
         vup: Vec3,
-        defocus_angle: f64,
-        focus_dist: f64,
+        defocus_radius: f64,
         sample_per_pixel: u8,
         max_depth: i16,
     ) -> Self {
@@ -77,6 +74,7 @@ impl Camera {
         // and the negative z-axis pointing in the viewing direction.
         // (This is commonly referred to as right-handed coordinates.)
 
+        let focus_dist = (lookfrom - lookat).length();
         // Camera
         let theta = degrees_to_radian(vfov);
         let h = (theta / 2.0).tan();
@@ -105,9 +103,6 @@ impl Camera {
         //       └──────────┘
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
-        // Defocus disk
-        let defocus_radius = focus_dist * (degrees_to_radian(defocus_angle / 2.0)).tan();
-
         Camera {
             _aspect_ratio: aspect_ratio,
             image_width,
@@ -125,8 +120,6 @@ impl Camera {
             u,
             v,
             w,
-            defocus_angle,
-            focus_dist,
             defocus_radius,
             max_depth,
         }
@@ -168,7 +161,7 @@ impl Camera {
         let pixel_center = self.pixel00_loc
             + (x as f64 + offset.x) * self.pixel_delta_u
             + (y as f64 + offset.y) * self.pixel_delta_v;
-        let ray_origin = if self.defocus_angle <= 0.0 {
+        let ray_origin = if self.defocus_radius <= 0.0 {
             self.center
         } else {
             self.defocus_disk_sample()
