@@ -1,1 +1,2 @@
 - Video explaining aperture and depth of field (defocus blur): https://www.youtube.com/watch?v=Bs9L_9iBVLQ
+- Final scene took around 45 min to render on Intel Core i5 13600K

@@ -96,7 +96,7 @@ fn main() {
 
     // Camera
     let aspect_ratio: f64 = 16.0 / 9.0;
-    let image_width: u64 = 400;
+    let image_width: u64 = 1200;
 
     let lookfrom = Point3::new(13.0, 2.0, 3.0);
     let lookat = Point3::new(0.0, 0.0, 0.0);
@@ -106,7 +106,7 @@ fn main() {
     let defocus_angle = 0.6;
     let focus_dist = 10.0;
 
-    let sample_per_pixel = 10;
+    let sample_per_pixel = 500;
     let max_depth = 50;
 
     let camera = Camera::new(
@@ -121,6 +121,6 @@ fn main() {
         sample_per_pixel,
         max_depth,
     );
-    let output_file = "out/final_scene_small.ppm";
+    let output_file = "out/final_scene.ppm";
     camera.render(&world, output_file).expect("render failed");
 }
