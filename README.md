@@ -11,9 +11,56 @@
 
 # Book 2: [Ray Tracing: The Next Week](https://raytracing.github.io/books/RayTracingTheNextWeek.html)
 
-WIP
+## Motion blur
 
-- [ ] Motion Blur
+What a pixel really represents:
+
+> Samples per pixel is no longer “just anti-aliasing”.
+> It’s the number of Monte Carlo samples used to integrate *everything* the camera measures.
+
+A pixel is **not** a single ray.
+
+A pixel is an **integral over many dimensions**:
+
+```math
+\text{pixel} =
+\int_{\text{pixel area}}
+\int_{\text{lens}}
+\int_{\text{time}}
+L(x, y, \ell, t)\, dA\, d\ell\, dt
+```
+
+Each of these integrals corresponds to a physical effect:
+
+| Dimension          | Effect             |
+| ------------------ | ------------------ |
+| pixel area         | anti-aliasing      |
+| lens aperture      | depth of field     |
+| time               | motion blur        |
+| (later) wavelength | spectral rendering |
+
+So we normalize:
+
+```math
+\text{pixel} =
+\frac{1}{A_{\text{pixel}}}
+\frac{1}{A_{\text{lens}}}
+\frac{1}{\Delta t}
+\int\!\!\int\!\!\int
+L(x, y, \ell, t)\;
+dA\; d\ell\; dt
+```
+This converts:
+
+- **total energy → average radiance (color) **
+
+Monte Carlo sampling is a cheap estimation of the above integral. 
+
+
+
+WIP:
+
+- [x] Motion Blur
 - [ ] BVH
 - [ ] Texure Mapping
 - [ ] Perlin Noise
