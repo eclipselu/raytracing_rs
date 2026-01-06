@@ -174,10 +174,12 @@ impl Camera {
             self.defocus_disk_sample()
         };
         let ray_direction = pixel_center - ray_origin;
+        let ray_time = random_double();
 
         Ray {
             origin: ray_origin,
             dir: ray_direction,
+            time: ray_time,
         }
     }
 

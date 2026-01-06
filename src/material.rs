@@ -18,7 +18,7 @@ pub struct Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, _ray_in: &Ray, rec: &Hit_Record) -> (Color, Option<Ray>) {
+    fn scatter(&self, ray_in: &Ray, rec: &Hit_Record) -> (Color, Option<Ray>) {
         // NOTE: this also generates a direction on the same hemisphere as the normal
         // but the distribution changed, the added normal vector shifts the distribution towards the normal,
         // it is no longer the uniform distribution.
@@ -30,6 +30,7 @@ impl Material for Lambertian {
         let scattered_ray = Ray {
             origin: rec.p,
             dir: scatter_direction,
+            time: ray_in.time,
         };
 
         (self.albedo, Option::Some(scattered_ray))
@@ -48,6 +49,7 @@ impl Material for Metal {
         let scattered_ray = Ray {
             origin: rec.p,
             dir: reflected,
+            time: ray_in.time,
         };
 
         if dot(scattered_ray.dir, rec.normal) > 0.0 {
@@ -103,6 +105,7 @@ impl Material for Dielectric {
         let scattered_ray = Ray {
             origin: rec.p,
             dir: direction,
+            time: ray_in.time,
         };
 
         (attenuation, Option::Some(scattered_ray))

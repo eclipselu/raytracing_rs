@@ -15,11 +15,11 @@ fn main() {
     let ground_mat = Rc::new(Lambertian {
         albedo: Color::new(0.5, 0.5, 0.5),
     });
-    world.add(Rc::new(Sphere {
-        center: Point3::new(0.0, -1000.5, 0.0),
-        radius: 1000.0,
-        material: ground_mat,
-    }));
+    world.add(Rc::new(Sphere::new_static(
+        Point3::new(0.0, -1000.5, 0.0),
+        1000.0,
+        ground_mat,
+    )));
 
     for a in -11..11 {
         for b in -11..11 {
@@ -37,32 +37,21 @@ fn main() {
                     let material = Rc::new(Lambertian {
                         albedo: Color::random() * Color::random(),
                     });
-                    world.add(Rc::new(Sphere {
-                        center: center,
-                        radius: 0.2,
-                        material: material,
-                    }));
+                    let center2 = center + Vec3::new(0.0, random_double_range(0.0, 0.5), 0.0);
+                    world.add(Rc::new(Sphere::new_moving(center, center2, 0.2, material)));
                 } else if choose_mat < 0.95 {
                     // metal
                     let material = Rc::new(Metal {
                         albedo: Color::random_range(0.5, 1.0),
                         fuzz: random_double_range(0.0, 0.5),
                     });
-                    world.add(Rc::new(Sphere {
-                        center: center,
-                        radius: 0.2,
-                        material: material,
-                    }));
+                    world.add(Rc::new(Sphere::new_static(center, 0.2, material)));
                 } else {
                     // glass
                     let material = Rc::new(Dielectric {
                         refraction_index: 1.5,
                     });
-                    world.add(Rc::new(Sphere {
-                        center: center,
-                        radius: 0.2,
-                        material: material,
-                    }));
+                    world.add(Rc::new(Sphere::new_static(center, 0.2, material)));
                 }
             }
         }
@@ -71,32 +60,32 @@ fn main() {
     let material1 = Rc::new(Dielectric {
         refraction_index: 1.5,
     });
-    world.add(Rc::new(Sphere {
-        center: Point3::new(0.0, 1.0, 0.0),
-        radius: 1.0,
-        material: material1,
-    }));
+    world.add(Rc::new(Sphere::new_static(
+        Point3::new(0.0, 1.0, 0.0),
+        1.0,
+        material1,
+    )));
     let material2 = Rc::new(Lambertian {
         albedo: Color::new(0.4, 0.2, 0.1),
     });
-    world.add(Rc::new(Sphere {
-        center: Point3::new(-4.0, 1.0, 0.0),
-        radius: 1.0,
-        material: material2,
-    }));
+    world.add(Rc::new(Sphere::new_static(
+        Point3::new(-4.0, 1.0, 0.0),
+        1.0,
+        material2,
+    )));
     let material3 = Rc::new(Metal {
         albedo: Color::new(0.8, 0.6, 0.5),
         fuzz: 0.0,
     });
-    world.add(Rc::new(Sphere {
-        center: Point3::new(4.0, 1.0, 0.0),
-        radius: 1.0,
-        material: material3,
-    }));
+    world.add(Rc::new(Sphere::new_static(
+        Point3::new(4.0, 1.0, 0.0),
+        1.0,
+        material3,
+    )));
 
     // Camera
     let aspect_ratio: f64 = 16.0 / 9.0;
-    let image_width: u64 = 1200;
+    let image_width: u64 = 400;
 
     let lookfrom = Point3::new(13.0, 2.0, 3.0);
     let lookat = Point3::new(0.0, 0.0, 0.0);
@@ -106,7 +95,7 @@ fn main() {
     let defocus_angle = 0.6;
     let focus_dist = 10.0;
 
-    let sample_per_pixel = 500;
+    let sample_per_pixel = 100;
     let max_depth = 50;
 
     let camera = Camera::new(
@@ -121,6 +110,6 @@ fn main() {
         sample_per_pixel,
         max_depth,
     );
-    let output_file = "out/final_scene.ppm";
+    let output_file = "out/motion_blur.ppm";
     camera.render(&world, output_file).expect("render failed");
 }
