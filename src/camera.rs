@@ -12,18 +12,18 @@ use crate::{
     vec3::{Color, Point3, Vec3, cross},
 };
 
-fn write_color(mut w: impl Write, color: Color) -> io::Result<()> {
-    let intentsity = Interval {
-        min: 0.0,
-        max: 0.999,
-    };
+const INTENSITY: Interval = Interval {
+    min: 0.0,
+    max: 0.999,
+};
 
+fn write_color(mut w: impl Write, color: Color) -> io::Result<()> {
     let r = linear_to_gamma(color.x);
     let g = linear_to_gamma(color.y);
     let b = linear_to_gamma(color.z);
-    let ir = (intentsity.clamp(r) * 256.0) as u64;
-    let ig = (intentsity.clamp(g) * 256.0) as u64;
-    let ib = (intentsity.clamp(b) * 256.0) as u64;
+    let ir = (INTENSITY.clamp(r) * 256.0) as u64;
+    let ig = (INTENSITY.clamp(g) * 256.0) as u64;
+    let ib = (INTENSITY.clamp(b) * 256.0) as u64;
 
     writeln!(w, "{} {} {}", ir, ig, ib)
 }

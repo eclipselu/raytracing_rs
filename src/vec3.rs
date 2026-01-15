@@ -225,3 +225,49 @@ pub fn refract(uv: Vec3, normal: Vec3, eta_over_etap: f64) -> Vec3 {
 
     r_out_perp + r_out_parallel
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_vec3_new() {
+        let v = Vec3::new(1.0, 2.0, 3.0);
+        assert_eq!(v.x, 1.0);
+        assert_eq!(v.y, 2.0);
+        assert_eq!(v.z, 3.0);
+    }
+
+    #[test]
+    fn test_vec3_length() {
+        let v = Vec3::new(3.0, 4.0, 0.0);
+        assert_eq!(v.length(), 5.0);
+    }
+
+    #[test]
+    fn test_vec3_add() {
+        let v1 = Vec3::new(1.0, 2.0, 3.0);
+        let v2 = Vec3::new(4.0, 5.0, 6.0);
+        let v3 = v1 + v2;
+        assert_eq!(v3.x, 5.0);
+        assert_eq!(v3.y, 7.0);
+        assert_eq!(v3.z, 9.0);
+    }
+
+    #[test]
+    fn test_vec3_dot() {
+        let v1 = Vec3::new(1.0, 2.0, 3.0);
+        let v2 = Vec3::new(4.0, 5.0, 6.0);
+        assert_eq!(dot(v1, v2), 4.0 + 10.0 + 18.0); // 32.0
+    }
+
+    #[test]
+    fn test_vec3_cross() {
+        let v1 = Vec3::new(1.0, 0.0, 0.0);
+        let v2 = Vec3::new(0.0, 1.0, 0.0);
+        let v3 = cross(v1, v2);
+        assert_eq!(v3.x, 0.0);
+        assert_eq!(v3.y, 0.0);
+        assert_eq!(v3.z, 1.0);
+    }
+}
