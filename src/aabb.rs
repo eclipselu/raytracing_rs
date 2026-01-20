@@ -4,6 +4,7 @@ use crate::{
     vec3::Point3,
 };
 
+#[derive(Debug, Copy, Clone, Default)]
 pub struct AABB {
     pub x: Interval,
     pub y: Interval,
@@ -12,7 +13,7 @@ pub struct AABB {
 
 impl AABB {
     pub fn new(x: Interval, y: Interval, z: Interval) -> Self {
-        AABB { x: x, y: y, z: z }
+        AABB { x, y, z }
     }
 
     pub fn new_from_extrema(a: Point3, b: Point3) -> Self {
@@ -29,7 +30,15 @@ impl AABB {
             max: f64::max(a.z, b.z),
         };
 
-        AABB { x: x, y: y, z: z }
+        AABB { x, y, z }
+    }
+
+    pub fn new_from_bbox(a: AABB, b: AABB) -> Self {
+        AABB {
+            x: Interval::enclosing_interval(a.x, b.x),
+            y: Interval::enclosing_interval(a.y, b.y),
+            z: Interval::enclosing_interval(a.z, b.z),
+        }
     }
 
     pub fn axis_interval(&self, n: usize) -> Interval {
@@ -44,15 +53,13 @@ impl AABB {
         }
     }
 
-    pub fn hit(self, r: &Ray) -> bool {
+    pub fn hit(&self, r: &Ray, mut ray_t: Interval) -> bool {
         let ray_origin = r.origin;
         let ray_dir = r.dir;
 
-        let mut ray_t = UNIVERSE_INTERVAL;
-
         for axis in 0..3 {
             let ax_intv = self.axis_interval(axis);
-            let adinv = ray_dir[axis];
+            let adinv = 1.0 / ray_dir[axis];
 
             let mut t0 = (ax_intv.min - ray_origin[axis]) * adinv;
             let mut t1 = (ax_intv.max - ray_origin[axis]) * adinv;
@@ -107,9 +114,15 @@ mod tests {
     #[test]
     fn axis_interval_returns_correct_axis() {
         let bbox = AABB::new(
-            Interval { min: -1.0, max: 2.0 },
+            Interval {
+                min: -1.0,
+                max: 2.0,
+            },
             Interval { min: 0.5, max: 3.5 },
-            Interval { min: -2.0, max: -1.0 },
+            Interval {
+                min: -2.0,
+                max: -1.0,
+            },
         );
 
         assert_interval(bbox.axis_interval(0), -1.0, 2.0);
@@ -126,7 +139,7 @@ mod tests {
             time: 0.0,
         };
 
-        assert!(bbox.hit(&ray));
+        assert!(bbox.hit(&ray, UNIVERSE_INTERVAL));
     }
 
     #[test]
@@ -138,6 +151,6 @@ mod tests {
             time: 0.0,
         };
 
-        assert!(!bbox.hit(&ray));
+        assert!(!bbox.hit(&ray, UNIVERSE_INTERVAL));
     }
 }

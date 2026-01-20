@@ -1,6 +1,7 @@
 use std::{f64, rc::Rc};
 
 use raytracing_rs::{
+    bvh::BVH_Node,
     camera::Camera,
     hittable::{Hittable_List, Sphere},
     material::{Dielectric, Lambertian, Metal},
@@ -83,6 +84,9 @@ fn main() {
         material3,
     )));
 
+    let bvh = BVH_Node::new(&mut world);
+    world = Hittable_List::new_from_hittable(Rc::new(bvh));
+
     // Camera
     let aspect_ratio: f64 = 16.0 / 9.0;
     let image_width: u64 = 400;
@@ -110,6 +114,6 @@ fn main() {
         sample_per_pixel,
         max_depth,
     );
-    let output_file = "out/motion_blur.ppm";
+    let output_file = "out/bvh.ppm";
     camera.render(&world, output_file).expect("render failed");
 }

@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
+    aabb::AABB,
     interval::Interval,
     material::Material,
     ray::Ray,
@@ -29,12 +30,14 @@ impl Hit_Record {
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, ray_t: Interval) -> Option<Hit_Record>;
+    fn bounding_box(&self) -> AABB;
 }
 
 pub struct Sphere {
     pub center: Ray,
     pub radius: f64,
     pub material: Rc<dyn Material>,
+    pub bbox: AABB,
 }
 
 impl Sphere {
@@ -49,10 +52,15 @@ impl Sphere {
             time: 0.0,
         };
 
+        // bounding box
+        let rvec = Vec3::new(radius, radius, radius);
+        let bbox = AABB::new_from_extrema(static_center - rvec, static_center + rvec);
+
         Sphere {
             center: ray,
             radius,
             material,
+            bbox,
         }
     }
 
@@ -68,10 +76,17 @@ impl Sphere {
             time: 0.0,
         };
 
+        // bounding box
+        let rvec = Vec3::new(radius, radius, radius);
+        let bbox1 = AABB::new_from_extrema(center1 - rvec, center1 + rvec);
+        let bbox2 = AABB::new_from_extrema(center2 - rvec, center2 + rvec);
+        let bbox = AABB::new_from_bbox(bbox1, bbox2);
+
         Sphere {
             center: ray,
             radius,
             material,
+            bbox,
         }
     }
 }
@@ -113,11 +128,16 @@ impl Hittable for Sphere {
 
         Option::Some(rec)
     }
+
+    fn bounding_box(&self) -> AABB {
+        self.bbox
+    }
 }
 
 #[derive(Default)]
 pub struct Hittable_List {
-    objects: Vec<Rc<dyn Hittable>>,
+    pub objects: Vec<Rc<dyn Hittable>>,
+    bbox: AABB,
 }
 
 impl Hittable_List {
@@ -125,7 +145,14 @@ impl Hittable_List {
         Self::default()
     }
 
+    pub fn new_from_hittable(object: Rc<dyn Hittable>) -> Self {
+        let mut hl = Hittable_List::new();
+        hl.add(object);
+        hl
+    }
+
     pub fn add(&mut self, object: Rc<dyn Hittable>) {
+        self.bbox = AABB::new_from_bbox(self.bbox, object.bounding_box());
         self.objects.push(object);
     }
 
@@ -154,5 +181,9 @@ impl Hittable for Hittable_List {
         }
 
         rec
+    }
+
+    fn bounding_box(&self) -> AABB {
+        self.bbox
     }
 }

@@ -1,6 +1,6 @@
 use std::f64;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct Interval {
     pub min: f64,
     pub max: f64,
@@ -27,6 +27,12 @@ impl Interval {
             return self.max;
         }
         x
+    }
+
+    pub fn enclosing_interval(a: Interval, b: Interval) -> Self {
+        let min = f64::min(a.min, b.min);
+        let max = f64::max(a.max, b.max);
+        Interval { min, max }
     }
 }
 
