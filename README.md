@@ -124,6 +124,15 @@ t_max = min(tx1, ty1, tz1)
 Hit if t_min < t_max and overlaps ray_t interval
 ```
 
+### Benchmark
+
+| Variant               | Real time | Speedup vs no BVH |
+| --------------------- | --------- | ----------------- |
+| No BVH                | 0m37.279s | 1.00x             |
+| BVH                   | 0m13.620s | 2.74x             |
+| BVH with optimization | 0m7.718s  | 4.83x             |
+
+
 ## WIP
 
 - [x] Motion Blur
