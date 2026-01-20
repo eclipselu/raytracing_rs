@@ -1,7 +1,5 @@
 use crate::{
-    interval::{Interval, UNIVERSE_INTERVAL},
-    ray::Ray,
-    vec3::Point3,
+    interval::{EMPTY_INTERVAL, Interval, UNIVERSE_INTERVAL}, ray::Ray, utils::double_eq, vec3::Point3
 };
 
 #[derive(Debug, Copy, Clone, Default)]
@@ -53,6 +51,21 @@ impl AABB {
         }
     }
 
+    pub fn longest_axis(&self) -> usize {
+        let xsize = self.x.size();
+        let ysize = self.y.size();
+        let zsize = self.z.size();
+        let max_size = xsize.max(ysize).max(zsize);
+
+        if double_eq(xsize, max_size) {
+            0
+        } else if double_eq(ysize, max_size) {
+            1
+        } else {
+            2
+        }
+    }
+
     pub fn hit(&self, r: &Ray, mut ray_t: Interval) -> bool {
         let ray_origin = r.origin;
         let ray_dir = r.dir;
@@ -79,6 +92,9 @@ impl AABB {
         true
     }
 }
+
+pub const EMPTY_AABB: AABB = AABB {x: EMPTY_INTERVAL, y: EMPTY_INTERVAL, z: EMPTY_INTERVAL};
+pub const UNIVERSE_AABB: AABB = AABB {x: UNIVERSE_INTERVAL, y: UNIVERSE_INTERVAL, z: UNIVERSE_INTERVAL};
 
 #[cfg(test)]
 mod tests {

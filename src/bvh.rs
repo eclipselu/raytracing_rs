@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, rc::Rc};
 
 use crate::{
-    aabb::AABB,
+    aabb::{AABB, EMPTY_AABB},
     hittable::{Hit_Record, Hittable, Hittable_List},
     interval::Interval,
     ray::Ray,
@@ -24,25 +24,31 @@ impl BVH_Node {
 
     pub fn new_from_objects(objects: &mut Vec<Rc<dyn Hittable>>, start: usize, end: usize) -> Self {
         assert!(start < end);
+        let mut bbox = EMPTY_AABB;
+        for obj in objects[start..end].iter() {
+            bbox = AABB::new_from_bbox(bbox, obj.bounding_box());
+        }
 
         let left: Rc<dyn Hittable>;
         let right: Rc<dyn Hittable>;
 
         let count = end - start;
-        if count <= 2 {
+        if count == 1 {
+            left = objects[start].clone();
+            right = objects[start].clone();
+        } else if count == 2 {
             left = objects[start].clone();
             right = objects[end - 1].clone();
         } else {
-            let axis = random_int_range(0, 2);
+            let axis = bbox.longest_axis();
             objects[start..end]
-                .sort_by(|a, b| BVH_Node::bbox_compare(a.as_ref(), b.as_ref(), axis as usize));
+                .sort_by(|a, b| BVH_Node::bbox_compare(a.as_ref(), b.as_ref(), axis));
 
             let mid = start + count / 2;
             left = Rc::new(BVH_Node::new_from_objects(objects, start, mid));
             right = Rc::new(BVH_Node::new_from_objects(objects, mid, end));
         }
 
-        let bbox = AABB::new_from_bbox(left.bounding_box(), right.bounding_box());
 
         BVH_Node { left, right, bbox }
     }
@@ -60,6 +66,9 @@ impl Hittable for BVH_Node {
         }
 
         let left_result = self.left.hit(ray, ray_t);
+        if Rc::ptr_eq(&self.left, &self.right) {
+            return left_result;
+        }
 
         let mut interval = ray_t;
         if let Some(left_res) = left_result.as_ref() {

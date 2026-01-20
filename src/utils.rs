@@ -24,3 +24,7 @@ pub fn linear_to_gamma(val: f64) -> f64 {
 pub fn degrees_to_radian(d: f64) -> f64 {
     d / 180.0 * PI
 }
+
+pub fn double_eq(a: f64, b: f64) -> bool {
+    (a - b).abs() < f64::EPSILON
+}
