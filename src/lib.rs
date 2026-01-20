@@ -1,5 +1,6 @@
 #![allow(nonstandard_style)]
 
+pub mod aabb;
 pub mod camera;
 pub mod hittable;
 mod interval;
