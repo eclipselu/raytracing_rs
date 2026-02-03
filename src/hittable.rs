@@ -13,6 +13,11 @@ pub struct Hit_Record {
     pub p: Point3,
     pub normal: Vec3,
     pub t: f64,
+
+    // texture coordinates
+    pub u: f64,
+    pub v: f64,
+
     pub front_face: bool,
     pub material: Rc<dyn Material>,
 }
@@ -117,9 +122,14 @@ impl Hittable for Sphere {
 
         let point = ray.at(root);
         let normal = (point - current_center) / self.radius;
+
+        let u = 0.0;
+        let v = 0.0;
         let mut rec = Hit_Record {
             p: point,
             t: root,
+            u,
+            v,
             normal,
             front_face: true,
             material: Rc::clone(&self.material),

@@ -5,6 +5,7 @@ use raytracing_rs::{
     camera::Camera,
     hittable::{Hittable_List, Sphere},
     material::{Dielectric, Lambertian, Metal},
+    texture::Checker_Texture,
     utils::{random_double, random_double_range},
     vec3::{Color, Point3, Vec3},
 };
@@ -13,8 +14,13 @@ fn main() {
     // World
     let mut world = Hittable_List::new();
 
+    let checker_tex = Rc::new(Checker_Texture::new(
+        0.32,
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
     let ground_mat = Rc::new(Lambertian {
-        albedo: Color::new(0.5, 0.5, 0.5),
+        texture: checker_tex,
     });
     world.add(Rc::new(Sphere::new_static(
         Point3::new(0.0, -1000.5, 0.0),
@@ -35,9 +41,8 @@ fn main() {
             if (center - Point3::new(4.0, -0.2, 0.0)).length() > 0.9 {
                 if choose_mat < 0.8 {
                     // diffuse
-                    let material = Rc::new(Lambertian {
-                        albedo: Color::random() * Color::random(),
-                    });
+                    let material =
+                        Rc::new(Lambertian::new_solid(Color::random() * Color::random()));
                     let center2 = center + Vec3::new(0.0, random_double_range(0.0, 0.5), 0.0);
                     world.add(Rc::new(Sphere::new_moving(center, center2, 0.2, material)));
                 } else if choose_mat < 0.95 {
@@ -66,9 +71,7 @@ fn main() {
         1.0,
         material1,
     )));
-    let material2 = Rc::new(Lambertian {
-        albedo: Color::new(0.4, 0.2, 0.1),
-    });
+    let material2 = Rc::new(Lambertian::new_solid(Color::new(0.4, 0.2, 0.1)));
     world.add(Rc::new(Sphere::new_static(
         Point3::new(-4.0, 1.0, 0.0),
         1.0,
@@ -114,6 +117,6 @@ fn main() {
         sample_per_pixel,
         max_depth,
     );
-    let output_file = "out/bvh.ppm";
+    let output_file = "out/checker_texture.ppm";
     camera.render(&world, output_file).expect("render failed");
 }

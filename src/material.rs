@@ -1,6 +1,9 @@
+use std::rc::Rc;
+
 use crate::{
     hittable::Hit_Record,
     ray::Ray,
+    texture::{Solid_Color, Texture},
     utils::random_double,
     vec3::{Color, Vec3, dot, reflect, refract},
 };
@@ -13,8 +16,14 @@ pub trait Material {
 }
 
 pub struct Lambertian {
-    // Whiteness of the diffused ray
-    pub albedo: Color,
+    pub texture: Rc<dyn Texture>,
+}
+
+impl Lambertian {
+    pub fn new_solid(color: Color) -> Self {
+        let texture = Rc::new(Solid_Color::new(color));
+        Lambertian { texture }
+    }
 }
 
 impl Material for Lambertian {
@@ -33,7 +42,9 @@ impl Material for Lambertian {
             time: ray_in.time,
         };
 
-        (self.albedo, Option::Some(scattered_ray))
+        let attenuation = self.texture.value(rec.u, rec.v, rec.p);
+
+        (attenuation, Option::Some(scattered_ray))
     }
 }
 

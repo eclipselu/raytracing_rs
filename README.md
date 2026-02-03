@@ -133,6 +133,13 @@ Hit if t_min < t_max and overlaps ray_t interval
 | BVH with optimization | 0m7.718s  | 4.83x             |
 
 
+## Texture Mapping
+
+In practice, we implement the process in reverse: given some point on the object, we’ll look up the color defined by the texture map.
+
+- [x] Checker board texture: leaving texture coordinates (u, v) as 0 for now. 
+
+
 ## WIP
 
 - [x] Motion Blur

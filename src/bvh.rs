@@ -5,7 +5,6 @@ use crate::{
     hittable::{Hit_Record, Hittable, Hittable_List},
     interval::Interval,
     ray::Ray,
-    utils::random_int_range,
 };
 
 pub struct BVH_Node {
@@ -48,7 +47,6 @@ impl BVH_Node {
             left = Rc::new(BVH_Node::new_from_objects(objects, start, mid));
             right = Rc::new(BVH_Node::new_from_objects(objects, mid, end));
         }
-
 
         BVH_Node { left, right, bbox }
     }
