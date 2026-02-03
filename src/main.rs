@@ -4,22 +4,23 @@ use raytracing_rs::{
     bvh::BVH_Node,
     camera::Camera,
     hittable::{Hittable_List, Sphere},
-    material::{Dielectric, Lambertian, Metal},
+    material::{Dielectric, Lambertian, Material, Metal},
     texture::Checker_Texture,
     utils::{random_double, random_double_range},
     vec3::{Color, Point3, Vec3},
 };
 
-fn main() {
+fn bouncing_balls_scene() {
     // World
     let mut world = Hittable_List::new();
 
-    let checker_tex = Rc::new(Checker_Texture::new(
+    // Ground with checker texture
+    let checker_tex: Rc<Checker_Texture> = Rc::new(Checker_Texture::new(
         0.32,
         Color::new(0.2, 0.3, 0.1),
         Color::new(0.9, 0.9, 0.9),
     ));
-    let ground_mat = Rc::new(Lambertian {
+    let ground_mat: Rc<Lambertian> = Rc::new(Lambertian {
         texture: checker_tex,
     });
     world.add(Rc::new(Sphere::new_static(
@@ -28,6 +29,7 @@ fn main() {
         ground_mat,
     )));
 
+    // Random small balls
     for a in -11..11 {
         for b in -11..11 {
             let choose_mat = random_double();
@@ -37,54 +39,57 @@ fn main() {
                 b as f64 + 0.9 * random_double(),
             );
 
-            // move small balls away from the big balls
+            // Move small balls away from the big balls
             if (center - Point3::new(4.0, -0.2, 0.0)).length() > 0.9 {
-                if choose_mat < 0.8 {
-                    // diffuse
-                    let material =
+                let sphere: Rc<Sphere> = if choose_mat < 0.8 {
+                    // Diffuse
+                    let mat: Rc<Lambertian> =
                         Rc::new(Lambertian::new_solid(Color::random() * Color::random()));
                     let center2 = center + Vec3::new(0.0, random_double_range(0.0, 0.5), 0.0);
-                    world.add(Rc::new(Sphere::new_moving(center, center2, 0.2, material)));
+                    Rc::new(Sphere::new_moving(center, center2, 0.2, mat))
                 } else if choose_mat < 0.95 {
-                    // metal
-                    let material = Rc::new(Metal {
+                    // Metal
+                    let mat: Rc<Metal> = Rc::new(Metal {
                         albedo: Color::random_range(0.5, 1.0),
                         fuzz: random_double_range(0.0, 0.5),
                     });
-                    world.add(Rc::new(Sphere::new_static(center, 0.2, material)));
+                    Rc::new(Sphere::new_static(center, 0.2, mat))
                 } else {
-                    // glass
-                    let material = Rc::new(Dielectric {
+                    // Glass
+                    let mat: Rc<Dielectric> = Rc::new(Dielectric {
                         refraction_index: 1.5,
                     });
-                    world.add(Rc::new(Sphere::new_static(center, 0.2, material)));
-                }
+                    Rc::new(Sphere::new_static(center, 0.2, mat))
+                };
+                world.add(sphere);
             }
         }
     }
 
-    let material1 = Rc::new(Dielectric {
+    // Three large balls
+    let glass: Rc<Dielectric> = Rc::new(Dielectric {
         refraction_index: 1.5,
     });
-    world.add(Rc::new(Sphere::new_static(
-        Point3::new(0.0, 1.0, 0.0),
-        1.0,
-        material1,
-    )));
-    let material2 = Rc::new(Lambertian::new_solid(Color::new(0.4, 0.2, 0.1)));
-    world.add(Rc::new(Sphere::new_static(
-        Point3::new(-4.0, 1.0, 0.0),
-        1.0,
-        material2,
-    )));
-    let material3 = Rc::new(Metal {
+    let brown: Rc<Lambertian> = Rc::new(Lambertian::new_solid(Color::new(0.4, 0.2, 0.1)));
+    let copper: Rc<Metal> = Rc::new(Metal {
         albedo: Color::new(0.8, 0.6, 0.5),
         fuzz: 0.0,
     });
+
+    world.add(Rc::new(Sphere::new_static(
+        Point3::new(0.0, 1.0, 0.0),
+        1.0,
+        glass,
+    )));
+    world.add(Rc::new(Sphere::new_static(
+        Point3::new(-4.0, 1.0, 0.0),
+        1.0,
+        brown,
+    )));
     world.add(Rc::new(Sphere::new_static(
         Point3::new(4.0, 1.0, 0.0),
         1.0,
-        material3,
+        copper,
     )));
 
     let bvh = BVH_Node::new(&mut world);
@@ -119,4 +124,61 @@ fn main() {
     );
     let output_file = "out/checker_texture.ppm";
     camera.render(&world, output_file).expect("render failed");
+}
+
+fn checked_balls_scene() {
+    // World
+    let mut world = Hittable_List::new();
+
+    let checker_tex =
+        Checker_Texture::new(0.32, Color::new(0.2, 0.3, 0.1), Color::new(0.9, 0.9, 0.9));
+    let mat: Rc<dyn Material> = Rc::new(Lambertian {
+        texture: Rc::new(checker_tex),
+    });
+
+    world.add(Rc::new(Sphere::new_static(
+        Point3::new(0.0, -10.0, 0.0),
+        10.0,
+        Rc::clone(&mat),
+    )));
+    world.add(Rc::new(Sphere::new_static(
+        Point3::new(0.0, 10.0, 0.0),
+        10.0,
+        mat,
+    )));
+
+    // Camera
+    let aspect_ratio: f64 = 16.0 / 9.0;
+    let image_width: u64 = 400;
+
+    let lookfrom = Point3::new(13.0, 2.0, 3.0);
+    let lookat = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let vfov = 20.0;
+
+    let defocus_angle = 0.6;
+    let focus_dist = 10.0;
+
+    let sample_per_pixel = 100;
+    let max_depth = 50;
+
+    let camera = Camera::new(
+        aspect_ratio,
+        image_width,
+        vfov,
+        lookfrom,
+        lookat,
+        vup,
+        defocus_angle,
+        focus_dist,
+        sample_per_pixel,
+        max_depth,
+    );
+    let output_file = "out/checked_balls.ppm";
+    camera.render(&world, output_file).expect("render failed");
+}
+
+fn main() {
+    // bouncing_balls_scene();
+    checked_balls_scene();
 }
