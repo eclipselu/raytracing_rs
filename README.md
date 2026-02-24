@@ -139,12 +139,18 @@ In practice, we implement the process in reverse: given some point on the object
 
 - [x] Checker board texture: leaving texture coordinates (u, v) as 0 for now. 
 
+### Sphere texture mapping
+
+Use spherical coordinate system to calculate the sphere coorindates: (phi, pi), then map the 2 angles to (0, 1) to get the (u, v), (u, v) can then be mapped to the image by scaling it using the image's dimension.
+
+See: https://en.wikipedia.org/wiki/UV_mapping
+
 
 ## WIP
 
 - [x] Motion Blur
 - [x] BVH
-- [ ] Texure Mapping
+- [x] Texure Mapping
 - [ ] Perlin Noise
 - [ ] Quadrilaterals
 - [ ] Lights

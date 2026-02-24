@@ -5,7 +5,7 @@ use raytracing_rs::{
     camera::Camera,
     hittable::{Hittable_List, Sphere},
     material::{Dielectric, Lambertian, Material, Metal},
-    texture::Checker_Texture,
+    texture::{Checker_Texture, Image_Texture},
     utils::{random_double, random_double_range},
     vec3::{Color, Point3, Vec3},
 };
@@ -178,7 +178,57 @@ fn checked_balls_scene() {
     camera.render(&world, output_file).expect("render failed");
 }
 
+fn earth_scene() {
+    let mut world = Hittable_List::new();
+
+    let earth_img = image::open("images/earthmap.jpg").unwrap();
+    let earth_texture = Image_Texture {
+        image: Rc::new(earth_img),
+    };
+
+    let earth_surface: Rc<dyn Material> = Rc::new(Lambertian {
+        texture: Rc::new(earth_texture),
+    });
+
+    world.add(Rc::new(Sphere::new_static(
+        Point3::new(0.0, 0.0, 0.0),
+        2.0,
+        earth_surface,
+    )));
+
+    // Camera
+    let aspect_ratio: f64 = 16.0 / 9.0;
+    let image_width: u64 = 400;
+
+    let lookfrom = Point3::new(0.0, 0.0, 12.0);
+    let lookat = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let vfov = 20.0;
+
+    let defocus_angle = 0.0;
+    let focus_dist = 10.0;
+
+    let sample_per_pixel = 100;
+    let max_depth = 50;
+
+    let camera = Camera::new(
+        aspect_ratio,
+        image_width,
+        vfov,
+        lookfrom,
+        lookat,
+        vup,
+        defocus_angle,
+        focus_dist,
+        sample_per_pixel,
+        max_depth,
+    );
+    let output_file = "out/earth_scene.ppm";
+    camera.render(&world, output_file).expect("render failed");
+}
+
 fn main() {
     // bouncing_balls_scene();
-    checked_balls_scene();
+    // checked_balls_scene();
+    earth_scene();
 }

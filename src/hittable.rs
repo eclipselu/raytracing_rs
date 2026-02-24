@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::f64::consts::PI;
 
 use crate::{
     aabb::AABB,
@@ -46,6 +47,15 @@ pub struct Sphere {
 }
 
 impl Sphere {
+    fn get_sphere_uv(p: Vec3) -> (f64, f64) {
+        let theta = (-p.y).acos();
+        let phi = (-p.z).atan2(p.x) + PI;
+        let u = phi / (2.0 * PI);
+        let v = theta / PI;
+
+        (u, v)
+    }
+
     pub fn new_static(static_center: Point3, radius: f64, material: Rc<dyn Material>) -> Self {
         let ray = Ray {
             origin: static_center,
@@ -123,8 +133,7 @@ impl Hittable for Sphere {
         let point = ray.at(root);
         let normal = (point - current_center) / self.radius;
 
-        let u = 0.0;
-        let v = 0.0;
+        let (u, v) = Sphere::get_sphere_uv(normal);
         let mut rec = Hit_Record {
             p: point,
             t: root,
