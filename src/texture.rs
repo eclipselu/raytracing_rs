@@ -4,6 +4,7 @@ use image::{DynamicImage, GenericImageView};
 
 use crate::{
     interval::Interval,
+    perlin::Perlin,
     vec3::{Color, Point3},
 };
 
@@ -105,5 +106,15 @@ impl Texture for Image_Texture {
         let pixel = self.get_pixel(i, j);
         // println!("({}, {}, {})", pixel[0], pixel[1], pixel[2]);
         pixel
+    }
+}
+
+pub struct Noise_Texture {
+    pub noise: Rc<Perlin>,
+}
+
+impl Texture for Noise_Texture {
+    fn value(&self, u: f64, v: f64, p: Point3) -> Color {
+        Color::new(1.0, 1.0, 1.0) * self.noise.noise(p)
     }
 }

@@ -5,7 +5,8 @@ use raytracing_rs::{
     camera::Camera,
     hittable::{Hittable_List, Sphere},
     material::{Dielectric, Lambertian, Material, Metal},
-    texture::{Checker_Texture, Image_Texture},
+    perlin::Perlin,
+    texture::{Checker_Texture, Image_Texture, Noise_Texture},
     utils::{random_double, random_double_range},
     vec3::{Color, Point3, Vec3},
 };
@@ -139,12 +140,12 @@ fn checked_balls_scene() {
     world.add(Rc::new(Sphere::new_static(
         Point3::new(0.0, -10.0, 0.0),
         10.0,
-        Rc::clone(&mat),
+        mat.clone(),
     )));
     world.add(Rc::new(Sphere::new_static(
         Point3::new(0.0, 10.0, 0.0),
         10.0,
-        mat,
+        mat.clone(),
     )));
 
     // Camera
@@ -227,8 +228,61 @@ fn earth_scene() {
     camera.render(&world, output_file).expect("render failed");
 }
 
+fn perlin_spheres() {
+    let mut world = Hittable_List::new();
+
+    let perlin = Perlin::new();
+    let perlin_texture = Noise_Texture {
+        noise: Rc::new(perlin),
+    };
+    let texture: Rc<dyn Material> = Rc::new(Lambertian {
+        texture: Rc::new(perlin_texture),
+    });
+
+    world.add(Rc::new(Sphere::new_static(
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        texture.clone(),
+    )));
+    world.add(Rc::new(Sphere::new_static(
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        texture.clone(),
+    )));
+
+    // Camera
+    let aspect_ratio: f64 = 16.0 / 9.0;
+    let image_width: u64 = 400;
+    let sample_per_pixel = 100;
+    let max_depth = 50;
+
+    let lookfrom = Point3::new(13.0, 2.0, 3.0);
+    let lookat = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let vfov = 20.0;
+
+    let defocus_angle = 0.0;
+    let focus_dist = 10.0;
+
+    let camera = Camera::new(
+        aspect_ratio,
+        image_width,
+        vfov,
+        lookfrom,
+        lookat,
+        vup,
+        defocus_angle,
+        focus_dist,
+        sample_per_pixel,
+        max_depth,
+    );
+    let output_file = "out/perlin_noise.ppm";
+    camera.render(&world, output_file).expect("render failed");
+}
+
 fn main() {
     // bouncing_balls_scene();
     // checked_balls_scene();
-    earth_scene();
+    // earth_scene();
+    perlin_spheres();
 }

@@ -6,6 +6,7 @@ pub mod camera;
 pub mod hittable;
 mod interval;
 pub mod material;
+pub mod perlin;
 mod ray;
 pub mod texture;
 pub mod utils;
